@@ -1,7 +1,7 @@
 tikz-circular-arc-model
 =======================
 
-Utilities to aid in creating circular-arc models with acceptable layout. These are generated using tikz and can be included into your latex document with ease. Layout will ignore arcs alsolute possitions around the circle.
+This repo is a set of utilities that aid in creation of circular-arc models with acceptable layout to be used in academic papers. These are generated using a simple json input representation which outputs tikz which can be included into your latex documents with ease. The layout of arcs will ignore the alsolute positions around the circle and instead draw a clear and spaced out diagram.
 
 Example usage
 -------------
@@ -19,7 +19,7 @@ Create a json file with all the arcs your model requires, each arc needs a label
 	]
 ```
 
-Then call the python generate script to make LaTeX code for the circular-arc diagram.
+Then call the generate script to make LaTeX code for the circular-arc diagram.
 
 ```bash
 	./generate.py example1.json
@@ -31,5 +31,5 @@ If you want to make pdf images to include into your document then just pipe it t
 	python ./generate.py example1.json | pdflatex --jobname outfile --
 ```
 
-That should give you pdf files which you can include into LaTeX documents which look like this:
+For the json given above you can expect the following circular-arc diagram to be generated:
 ![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example1.png)
