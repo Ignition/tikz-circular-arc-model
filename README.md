@@ -26,4 +26,4 @@ If you want to make pdf images to include into your document then just pipe it t
 	python ./generate.py example1.json | pdflatex --jobname outfile --
 
 That should give you pdf files which you can include into LaTeX documents which look like this:
-![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example1.svg)
+![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example1.png)
