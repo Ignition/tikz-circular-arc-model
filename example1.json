@@ -1,0 +1,8 @@
+[
+  {"label": "a", "start":  50, "end": 100}, 
+  {"label": "b", "start":  50, "end":  50}, 
+  {"label": "c", "start": 100, "end": 200}, 
+  {"label": "d", "start": 200, "end": 300}, 
+  {"label": "e", "start": 300, "end": 400}, 
+  {"label": "f", "start": 400, "end": 100}
+]
