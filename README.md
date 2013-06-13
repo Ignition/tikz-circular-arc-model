@@ -8,6 +8,7 @@ Example usage
 
 Create a json file with all the arcs your model requires, each arc needs a label a start and end position.
 
+```json
 	[
 		{"label": "a", "start":  50, "end": 100},
 		{"label": "b", "start":  50, "end":  50},
@@ -16,14 +17,19 @@ Create a json file with all the arcs your model requires, each arc needs a label
 		{"label": "e", "start": 300, "end": 400},
 		{"label": "f", "start": 400, "end": 100}
 	]
+```
 
 Then call the python generate script to make LaTeX code for the circular-arc diagram.
 
+```bash
 	./generate.py example1.json
+```
 
 If you want to make pdf images to include into your document then just pipe it through `pdflatex`
 
+```bash
 	python ./generate.py example1.json | pdflatex --jobname outfile --
+```
 
 That should give you pdf files which you can include into LaTeX documents which look like this:
 ![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example1.png)
