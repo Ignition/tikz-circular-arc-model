@@ -24,3 +24,6 @@ Then call the python generate script to make LaTeX code for the circular-arc dia
 If you want to make pdf images to include into your document then just pipe it through `pdflatex`
 
 	python ./generate.py example1.json | pdflatex --jobname outfile --
+
+That should give you pdf files which you can include into LaTeX documents which look like this:
+![Circular-arc model]()
