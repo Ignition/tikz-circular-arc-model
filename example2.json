@@ -7,5 +7,7 @@
 		{"label": "e", "start": 300, "end": 400}, 
 		{"label": "f", "start": 400, "end": 100}
 	],
-	"options": {}
+	"options": {
+		"show-intersection": ["a","b"]
+	}
 }

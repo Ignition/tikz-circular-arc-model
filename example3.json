@@ -1,0 +1,23 @@
+{
+	"arcs": [
+		{"label": "a", "start":  0, "end": 8}, 
+		{"label": "b", "start":  1, "end": 1},
+		{"label": "c", "start":  2, "end": 2}, 
+		{"label": "d", "start":  3, "end": 3},
+		{"label": "e", "start":  4, "end": 6},
+		{"label": "f", "start":  4, "end": 8},
+		{"label": "g", "start":  5, "end": 5},
+		{"label": "h", "start":  6, "end": 3}, 
+		{"label": "i", "start":  7, "end": 7},
+		{"label": "j", "start":  8, "end": 0}, 
+		{"label": "k", "start":  9, "end": 11},
+		{"label": "l", "start":  9, "end": 9},
+		{"label": "m", "start":  10, "end": 10},
+		{"label": "n", "start":  11, "end": 12},
+		{"label": "o", "start":  12, "end": 12}
+
+	],
+	"options": {
+		"show-intersection": ["a","j"]
+	}
+}

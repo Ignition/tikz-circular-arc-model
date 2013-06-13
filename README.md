@@ -8,14 +8,17 @@ Example usage
 
 Create a json file with all the arcs your model requires, each arc needs a label a start and end position.
 
-	[
-		{"label": "a", "start":  50, "end": 100},
-		{"label": "b", "start":  50, "end":  50},
-		{"label": "c", "start": 100, "end": 200},
-		{"label": "d", "start": 200, "end": 300},
-		{"label": "e", "start": 300, "end": 400},
-		{"label": "f", "start": 400, "end": 100}
-	]
+	{
+		"arcs": [
+			{"label": "a", "start":  50, "end": 100},
+			{"label": "b", "start":  50, "end":  50},
+			{"label": "c", "start": 100, "end": 200},
+			{"label": "d", "start": 200, "end": 300},
+			{"label": "e", "start": 300, "end": 400},
+			{"label": "f", "start": 400, "end": 100}
+		],
+		"options": {}
+	}
 
 Then call the python generate script to make LaTeX code for the circular-arc diagram.
 
@@ -27,3 +30,7 @@ If you want to make pdf images to include into your document then just pipe it t
 
 That should give you pdf files which you can include into LaTeX documents which look like this:
 ![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example1.png)
+
+You may also add into options `"show-intersection": ["a","b"]` which would give a graph like this:
+![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example2.png)
+
