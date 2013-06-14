@@ -35,8 +35,10 @@ If you want to make pdf images to include into your document then just pipe it t
 ```
 
 For the json given above you can expect the following circular-arc diagram to be generated:
+
 ![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example1.png)
 
 You may also add into options `"show-intersection": ["a","b"]` which would give a graph like this:
+
 ![Circular-arc model](https://raw.github.com/Ignition/tikz-circular-arc-model/master/example2.png)
 
