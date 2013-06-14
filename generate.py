@@ -8,11 +8,14 @@ from django.template import Template, Context
 from django.conf import settings
 settings.configure()
 from pprint import pprint
+import itertools
 
 dist_scale = 0.7
 max_dist = 3
 
 twopi = 2.0*math.pi
+
+clique_index = []
 
 latex_template = Template('\
 \documentclass[tikz]{standalone}\n\
@@ -38,42 +41,56 @@ def coord_template(num, total):
 	return latex_template.render(c)
 
 def arc_template(name, start, end, total, dist):
-	offset = 0.9*(twopi/total)/5
-	overhang = (360.0/total)/5
-	v_sin = round(dist_scale*(dist+0.3)*math.sin(twopi*start/total - offset),5)
-	v_cos = round(dist_scale*(dist+0.3)*math.cos(twopi*start/total - offset),5)
+	overhang_deg = (360.0/total)/5
+	overhang_rad = twopi*overhang_deg/360
+	position = twopi*start/total
+	scale = dist_scale*(dist+0.3)
+	v_sin = round(scale*math.sin(position - 0.9*overhang_rad),5)
+	v_cos = round(scale*math.cos(position - 0.9*overhang_rad),5)
 	latex_template = Template('\
 \\tkzDrawArc[R with nodes, delta={{ overhang }}](centre,{{ dist }})(p{{ end }},p{{ start }});\n\
 \\node (LABEL-{{ start }}-{{ end }}) at ({{ sin }}, {{ cos }}) {${{ name }}$};\n')
-	c = Context({"name": name, "cos": v_cos, "sin": v_sin, "dist": dist_scale*dist, "start":start,"end":end,"overhang":overhang})
+	c = Context({"name": name, "cos": v_cos, "sin": v_sin, "dist": dist_scale*dist, "start":start,"end":end,"overhang":overhang_deg})
 	return latex_template.render(c)
 
 def region_template(start, end, total):
-	dist = dist_scale*(max_dist + 0.1)
-	dist2 = dist_scale*(2.0 - 0.1)
+	scale1 = dist_scale*(max_dist + 0.1)
+	scale2 = dist_scale*(2.0 - 0.1)
 	overhang_deg = (360.0/total)/5
 	overhang_rad = twopi*overhang_deg/360
-	v_sin_s1 = round(dist2*math.sin(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
-	v_cos_s1 = round(dist2*math.cos(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
-	v_sin_e1 = round(dist2*math.sin(twopi*end/total+overhang_rad),5) #10deg ~=0.175rad
-	v_cos_e1 = round(dist2*math.cos(twopi*end/total+overhang_rad),5) #10deg ~=0.175rad
-	v_sin_s2 = round(dist*math.sin(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
-	v_cos_s2 = round(dist*math.cos(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
+	position1 = twopi*start/total
+	position2 = twopi*end/total
+	v_sin_s1 = round(scale2*math.sin(position1-overhang_rad),5) #10deg ~=0.175rad
+	v_cos_s1 = round(scale2*math.cos(position1-overhang_rad),5) #10deg ~=0.175rad
+	v_sin_e1 = round(scale2*math.sin(position2+overhang_rad),5) #10deg ~=0.175rad
+	v_cos_e1 = round(scale2*math.cos(position2+overhang_rad),5) #10deg ~=0.175rad
+	v_sin_s2 = round(scale1*math.sin(position1-overhang_rad),5) #10deg ~=0.175rad
+	v_cos_s2 = round(scale1*math.cos(position1-overhang_rad),5) #10deg ~=0.175rad
 	latex_template = Template('\\fill[red!50]\
 ( {{ sins1 }} , {{ coss1 }}) -- ( {{ sins2 }} , {{ coss2 }})\
 arc[end angle={-{{ end }}*360/ {{ total }}+90-{{ overhang }}}, start angle={-{{ start }}*360/ {{ total }}+90+ {{ overhang }}},radius={{ dist }}] -- \
 ({{ sine1 }}, {{ cose1 }})\
 arc[end angle={-{{ start }}*360/ {{ total }}+90+ {{ overhang }}}, start angle={-{{ end }}*360/ {{ total }}+90- {{ overhang }}},radius={{ dist2 }}] ;')
-	c = Context({"sins1": v_sin_s1, "coss1": v_cos_s1, "sins2": v_sin_s2, "coss2": v_cos_s2, "end":end,"total":total,"start":start,"dist":dist,"sine1":v_sin_e1,"cose1":v_cos_e1,"dist2":dist2,"overhang":overhang_deg})
+	c = Context({"sins1": v_sin_s1, "coss1": v_cos_s1, "sins2": v_sin_s2, "coss2": v_cos_s2, "end":end,"total":total,"start":start,"dist":scale1,"sine1":v_sin_e1,"cose1":v_cos_e1,"dist2":scale2,"overhang":overhang_deg})
 	return latex_template.render(c)
 
+def next_free(arc):
+	if arc["start"] <= arc["end"]:
+		not_free = itertools.chain(*clique_index[arc["start"]:arc["end"]+1])
+	else:
+		not_free = itertools.chain(*clique_index[0:arc["end"]+1])
+		not_free = itertools.chain(not_free, itertools.chain(*clique_index[arc["start"]:]))
+	not_free = filter(lambda x: "dist" in x, not_free)
+	not_free = set(x["dist"] for x in not_free)
+	dist = 3
+	while dist in not_free:
+		dist += 1
+	return dist
 
 def helper(d, dists_done, arcs, clique_num):
 	global max_dist
 	if "dist" not in d:
-		dist = 3
-		while (dist in dists_done):
-			dist += 1
+		dist = next_free(d)
 		max_dist = max(max_dist, dist)
 		arcs += arc_template(d["label"], d["start"], d["end"], clique_num, dist)
 		d["dist"] = dist
@@ -83,7 +100,8 @@ def helper(d, dists_done, arcs, clique_num):
 	return arcs
 
 def main():
-	global dist_scale
+	global clique_index
+
 	if len(sys.argv) != 2:
 		sys.stderr.write('Usage: {0} {{file}}\n'.format(sys.argv[0]))
 		sys.exit(1)
@@ -115,6 +133,7 @@ def main():
 		#reposition depending on clique grouping
 		clique_num = 0
 		start_seq = True
+		in_clique = []
 		while len(s_sort) != 0 and len(e_sort) != 0:
 			if s_sort[0]["start"] <= e_sort[0]["end"]:
 				d = s_sort[0]
@@ -123,26 +142,33 @@ def main():
 					clique_num += 1
 					start_seq = True
 				d["start"] = clique_num
+				in_clique.append(d)
 			else:
 				d = e_sort[0]
 				e_sort.pop(0)
 				if start_seq == True:
+					clique_index.append(list(in_clique))
 					start_seq = False
 				d["end"] = clique_num
-		while len(s_sort) != 0:
-			d = s_sort[0]
-			s_sort.pop(0)
+				if d in in_clique:
+					in_clique.remove(d)
+		for d in s_sort:
 			d["start"] = 0
-		while len(e_sort) != 0:
-			d = e_sort[0]
-			e_sort.pop(0)
+			for cn in xrange(d["end"]+1):
+				clique_index[cn].append(d)
+		for d in e_sort:
+			if start_seq == True:
+				clique_index.append(in_clique)
+				start_seq = False
 			d["end"] = clique_num
+			if d in in_clique:
+				in_clique.remove(d)
+		for d in in_clique:
+			for cn in xrange(d["end"]+1):
+				clique_index[cn].append(d)
 
 		# correct to get clique count
 		clique_num += 1
-
-		#dist_scale /= 3
-		#dist_scale *= clique_num
 
 		coords = ''
 		arcs = ''
@@ -150,23 +176,17 @@ def main():
 		for i in xrange(clique_num):
 			coords += coord_template(i, clique_num)
 			# get arcs that need placing here
-			to_place = []
-			for d in data:
-				if d["start"] <= d["end"]:
-					if d["start"] <= i and d["end"] >= i:
-						to_place.append(d)
-				else:
-					if d["start"] <= i or d["end"] >= i:
-						to_place.append(d)
+			to_place = clique_index[i]
 			dists_done = set()
+			#filter out those allocated
+			to_place = filter(lambda x: "dist" not in x, to_place)
 			#sort by arc length
-			to_place.sort(reverse=True, key=lambda x: "dist" in x)
-			while len(to_place) != 0 and "dist" in to_place[0]:
-				dists_done.add(to_place[0]["dist"])
-				to_place = to_place[1:]
 			to_place.sort(reverse=True, key=lambda x: (x["end"] - x["start"] + 1) if (x["start"] <= x["end"]) else (clique_num - x["start"] + x["end"] + 1))
 			for d in to_place:
 				arcs = helper(d, dists_done, arcs, clique_num)
+
+
+		#show-intersection
 		extra = ''
 		if "show-intersection" in options:
 			a, b = options["show-intersection"]
@@ -195,8 +215,6 @@ def main():
 
 		c = Context({"coords":coords,"arcs":arcs,"extra":extra,"circle": 1.0/dist_scale,"scale":0.8 })
 		print latex_template.render(c)
-
-
 
 if __name__ == '__main__':
 	main()
