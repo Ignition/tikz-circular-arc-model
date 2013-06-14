@@ -9,7 +9,7 @@ from django.conf import settings
 settings.configure()
 from pprint import pprint
 
-dist_scale = 0.5
+dist_scale = 0.7
 max_dist = 3
 
 twopi = 2.0*math.pi
@@ -38,30 +38,33 @@ def coord_template(num, total):
 	return latex_template.render(c)
 
 def arc_template(name, start, end, total, dist):
-	offset = 15/dist_scale
-	v_sin = round(float(dist)*math.sin(twopi*start/total - (twopi*offset)/360),5)
-	v_cos = round(float(dist)*math.cos(twopi*start/total - (twopi*offset)/360),5)
+	offset = 0.9*(twopi/total)/5
+	overhang = (360.0/total)/5
+	v_sin = round(dist_scale*(dist+0.3)*math.sin(twopi*start/total - offset),5)
+	v_cos = round(dist_scale*(dist+0.3)*math.cos(twopi*start/total - offset),5)
 	latex_template = Template('\
-\\tkzDrawArc[R with nodes, delta=5](centre,{{ dist }})(p{{ end }},p{{ start }});\n\
+\\tkzDrawArc[R with nodes, delta={{ overhang }}](centre,{{ dist }})(p{{ end }},p{{ start }});\n\
 \\node (LABEL-{{ start }}-{{ end }}) at ({{ sin }}, {{ cos }}) {${{ name }}$};\n')
-	c = Context({"name": name, "cos": v_cos, "sin": v_sin, "dist": dist, "start":start,"end":end})
+	c = Context({"name": name, "cos": v_cos, "sin": v_sin, "dist": dist_scale*dist, "start":start,"end":end,"overhang":overhang})
 	return latex_template.render(c)
 
 def region_template(start, end, total):
 	dist = dist_scale*(max_dist + 0.1)
 	dist2 = dist_scale*(2.0 - 0.1)
-	v_sin_s1 = round(dist2*math.sin(twopi*start/total-(twopi*10)/360),5) #10deg ~=0.175rad
-	v_cos_s1 = round(dist2*math.cos(twopi*start/total-(twopi*10)/360),5) #10deg ~=0.175rad
-	v_sin_e1 = round(dist2*math.sin(twopi*end/total+(twopi*10)/360),5) #10deg ~=0.175rad
-	v_cos_e1 = round(dist2*math.cos(twopi*end/total+(twopi*10)/360),5) #10deg ~=0.175rad
-	v_sin_s2 = round(dist*math.sin(twopi*start/total-(twopi*10)/360),5) #10deg ~=0.175rad
-	v_cos_s2 = round(dist*math.cos(twopi*start/total-(twopi*10)/360),5) #10deg ~=0.175rad
+	overhang_deg = (360.0/total)/5
+	overhang_rad = twopi*overhang_deg/360
+	v_sin_s1 = round(dist2*math.sin(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
+	v_cos_s1 = round(dist2*math.cos(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
+	v_sin_e1 = round(dist2*math.sin(twopi*end/total+overhang_rad),5) #10deg ~=0.175rad
+	v_cos_e1 = round(dist2*math.cos(twopi*end/total+overhang_rad),5) #10deg ~=0.175rad
+	v_sin_s2 = round(dist*math.sin(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
+	v_cos_s2 = round(dist*math.cos(twopi*start/total-overhang_rad),5) #10deg ~=0.175rad
 	latex_template = Template('\\fill[red!50]\
 ( {{ sins1 }} , {{ coss1 }}) -- ( {{ sins2 }} , {{ coss2 }})\
-arc[end angle={-{{ end }}*360/ {{ total }}+90-10}, start angle={-{{ start }}*360/ {{ total }}+90+10},radius={{ dist }}] -- \
+arc[end angle={-{{ end }}*360/ {{ total }}+90-{{ overhang }}}, start angle={-{{ start }}*360/ {{ total }}+90+ {{ overhang }}},radius={{ dist }}] -- \
 ({{ sine1 }}, {{ cose1 }})\
-arc[end angle={-{{ start }}*360/ {{ total }}+90+10}, start angle={-{{ end }}*360/ {{ total }}+90-10},radius={{ dist2 }}] ;')
-	c = Context({"sins1": v_sin_s1, "coss1": v_cos_s1, "sins2": v_sin_s2, "coss2": v_cos_s2, "end":end,"total":total,"start":start,"dist":dist,"sine1":v_sin_e1,"cose1":v_cos_e1,"dist2":dist2})
+arc[end angle={-{{ start }}*360/ {{ total }}+90+ {{ overhang }}}, start angle={-{{ end }}*360/ {{ total }}+90- {{ overhang }}},radius={{ dist2 }}] ;')
+	c = Context({"sins1": v_sin_s1, "coss1": v_cos_s1, "sins2": v_sin_s2, "coss2": v_cos_s2, "end":end,"total":total,"start":start,"dist":dist,"sine1":v_sin_e1,"cose1":v_cos_e1,"dist2":dist2,"overhang":overhang_deg})
 	return latex_template.render(c)
 
 
@@ -72,7 +75,7 @@ def helper(d, dists_done, arcs, clique_num):
 		while (dist in dists_done):
 			dist += 1
 		max_dist = max(max_dist, dist)
-		arcs += arc_template(d["label"], d["start"], d["end"], clique_num, dist_scale*dist)
+		arcs += arc_template(d["label"], d["start"], d["end"], clique_num, dist)
 		d["dist"] = dist
 		dists_done.add(dist)
 	else:
@@ -138,8 +141,8 @@ def main():
 		# correct to get clique count
 		clique_num += 1
 
-		dist_scale /= 3
-		dist_scale *= clique_num
+		#dist_scale /= 3
+		#dist_scale *= clique_num
 
 		coords = ''
 		arcs = ''
@@ -190,7 +193,7 @@ def main():
 					else:
 						extra += region_template(arcb["start"], min(arca["end"],arcb["end"]), clique_num)
 
-		c = Context({"coords":coords,"arcs":arcs,"extra":extra,"circle": dist_scale*2,"scale":0.7 })
+		c = Context({"coords":coords,"arcs":arcs,"extra":extra,"circle": 1.0/dist_scale,"scale":0.8 })
 		print latex_template.render(c)
 
 
