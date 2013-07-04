@@ -113,7 +113,9 @@ def main():
 		with open(file_name) as data_file:
 			data = json.load(data_file)
 
-		options = data["options"]
+		options = None
+		if "options" in data:
+			options = data["options"]
 		data = data["arcs"]
 
 		#offset all the posiitons, such that at least one start is equal to 0
@@ -158,7 +160,7 @@ def main():
 				clique_index[cn].append(d)
 		for d in e_sort:
 			if start_seq == True:
-				clique_index.append(in_clique)
+				clique_index.append(list(in_clique))
 				start_seq = False
 			d["end"] = clique_num
 			if d in in_clique:
@@ -188,7 +190,7 @@ def main():
 
 		#show-intersection
 		extra = ''
-		if "show-intersection" in options:
+		if options != None and "show-intersection" in options:
 			a, b = options["show-intersection"]
 			arca = filter(lambda x: x["label"] == a, data)[0]
 			arcb = filter(lambda x: x["label"] == b, data)[0]
